@@ -13,11 +13,13 @@ export function tomd(url) {
   return new Promise((resolve, reject) => {
     console.log(url);
     if (url) {
-      read(url, function(err, article, meta) {
+      read(url,{
+        proxy: 'http://proxy-tmg.wb.devb.hksarg:8080/'
+      }, function(err, article, meta) {
         //console.log(err);
         //console.log(meta);
         if (err) {
-          reject("fail: " + err);
+          return reject("fail: " + err);
         }
         console.log(article.title);
         let content = h2m(article.content, {});
@@ -27,7 +29,7 @@ export function tomd(url) {
           date.getMinutes()
         )}:${formate2(date.getSeconds())}`;
 
-        let dateStr = `${date.getYear()}-${formate2(
+        let dateStr = `${date.getFullYear()}-${formate2(
           date.getMonth()
         )}-${formate2(date.getDate())}`;
         let body = `---
@@ -46,7 +48,7 @@ ${content}
           .replace(/\s+/g, " ")
           .replace(/\.+/g, "")
           .trim();
-        let filePath = `blog/_posts/${dateStr}-${fileName}.md`;
+        let filePath = `blog/_posts/2000-01-01-${fileName}.md`;
 
         console.log(filePath);
         fs.writeFile(filePath, body, function(err) {
@@ -58,7 +60,7 @@ ${content}
         resolve("success");
       });
     } else {
-      reject("fail: " + url);
+     return reject("fail: " + url);
     }
   });
 }
