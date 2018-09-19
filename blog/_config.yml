@@ -29,7 +29,9 @@ markdown: kramdown
 theme: minima
 plugins:
   - jekyll-feed
-
+  - jekyll-paginate-v2
+plugins_dir:
+  - jekyll-paginate-v2
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
 # to override the default setting.
@@ -42,3 +44,19 @@ plugins:
 #   - vendor/gems/
 #   - vendor/ruby/
 permalink: /:categories/:title.html
+
+############################################################
+# Site configuration for the Jekyll 3 Pagination Gem
+# The values here represent the defaults if nothing is set
+
+# Pagination Settings
+pagination:
+  enabled: true
+  per_page: 5
+  #offset: 2
+  permalink: "/page/:num/"
+  #title: ":title - page :num of :max"
+  title: ":title - page :num of :max"
+  limit: 0
+  sort_field: "date"
+  sort_reverse: true

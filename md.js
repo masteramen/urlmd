@@ -14,7 +14,9 @@ export function tomd(url) {
     console.log(url);
     if (url) {
       read(url,{
-        proxy: 'http://proxy-tmg.wb.devb.hksarg:8080/'
+        proxy: 'http://proxy-tmg.wb.devb.hksarg:8080/',
+        'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+        'Referer':url
       }, function(err, article, meta) {
         //console.log(err);
         //console.log(meta);
@@ -48,7 +50,7 @@ ${content}
           .replace(/\s+/g, " ")
           .replace(/\.+/g, "")
           .trim();
-        let filePath = `blog/_posts/2000-01-01-${fileName}.md`;
+        let filePath = `blog/_posts/2000-01-01-${fileName}.md`.replace(/\s+/g,'-').replace(/\-+/g,'-');
 
         console.log(filePath);
         fs.writeFile(filePath, body, function(err) {
