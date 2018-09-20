@@ -18,7 +18,7 @@ export function tomd(url) {
       read(
         url,
         {
-          // proxy: 'http://proxy-tmg.wb.devb.hksarg:8080/',
+          // proxy: 'http://192.168.1.30:8080/',
           "User-Agent":
             "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
           Referer: url

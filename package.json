@@ -17,6 +17,12 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
-    "pinyin": "^2.8.3"
+    "global-tunnel-ng": "^2.6.0",
+    "google-translate-token": "^1.0.0",
+    "got": "^9.2.2",
+    "pinyin": "^2.8.3",
+    "querystring": "^0.2.0",
+    "safe-eval": "^0.4.1",
+    "tunnel-agent": "^0.6.0"
   }
 }
