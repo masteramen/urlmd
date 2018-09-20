@@ -2,6 +2,7 @@ var express = require("express");
 var path = require("path");
 var fs = require("fs");
 var md = require("./md");
+const { exec } = require('child_process');
 
 var app = express();
 
@@ -18,10 +19,20 @@ app.use(function(req, res, next) {
 app.get("/", function(req, res) {
   console.log(req.query.url);
   console.log(req.query);
+  exec('code ', (err, stdout, stderr) => {
+    if (err) {
+      // node couldn't execute the command
+      return;
+    }
+  
+    // the *entire* stdout and stderr (buffered)
+    console.log(`stdout: ${stdout}`);
+    console.log(`stderr: ${stderr}`);
+  });
 
   (async () => {
     try {
-      let result = await md.tomd(req.query.url);
+      let result = await md.tomd(req.query.url,req.query.lang);
       result = `<html><head><script>alert("${result}");history.go(-1);</script></head></html>`;
       res.send(result);
     } catch (e) {

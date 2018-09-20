@@ -30,6 +30,7 @@ theme: minima
 plugins:
   - jekyll-feed
   - jekyll-paginate-v2
+  - jekyll-target-blank
 plugins_dir:
   - jekyll-paginate-v2
 # Exclude from processing.
@@ -43,7 +44,7 @@ plugins_dir:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
-permalink: /:categories/:title.html
+permalink: /:year/:title.html
 
 ############################################################
 # Site configuration for the Jekyll 3 Pagination Gem
