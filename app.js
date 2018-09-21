@@ -2,8 +2,14 @@ var express = require("express");
 var path = require("path");
 var fs = require("fs");
 var md = require("./md");
-const { exec } = require('child_process');
-
+var globalTunnel = require('global-tunnel-ng');
+//http://proxy-tmg.wb.devb.hksarg:8080/
+globalTunnel.initialize({
+	  host: '192.168.1.30',
+	  port: 8080,
+	  //proxyAuth: 'userId:password', // optional authentication
+	  //sockets: 50 // optional pool size for each http and https
+});
 var app = express();
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -19,16 +25,7 @@ app.use(function(req, res, next) {
 app.get("/", function(req, res) {
   console.log(req.query.url);
   console.log(req.query);
-  exec('code ', (err, stdout, stderr) => {
-    if (err) {
-      // node couldn't execute the command
-      return;
-    }
-  
-    // the *entire* stdout and stderr (buffered)
-    console.log(`stdout: ${stdout}`);
-    console.log(`stderr: ${stderr}`);
-  });
+
 
   (async () => {
     try {

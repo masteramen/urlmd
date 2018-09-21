@@ -3,21 +3,8 @@ var fs = require("fs");
 var translate = require("./translate");
 var sleep = require("./sleep");
 
-let translator = async filePath => {
-  let baseName = path.win32.basename(filePath, ".md");
-  let newPath = path.join(filePath, "..", baseName + "-translated.md");
-  let lastIndex = baseName.lastIndexOf("-translated");
-  if (lastIndex > 0 && lastIndex === baseName.length - "-translated".length) {
-    return;
-  }
-  process.stdout.write(baseName + " translate start\n");
-  process.stdout.write("will export to \n" + newPath + "\n");
-  try {
-    var data = fs.readFileSync(filePath, "utf8");
-  } catch (err) {
-    console.log("Err wrong filePath\n" + err);
-    process.exit(1);
-  }
+let translateStr = async data => {
+
   let array = data.split("\n");
   let isCode = false;
 
@@ -71,7 +58,7 @@ let translator = async filePath => {
       k += 1;
       try {
         let prefix = current.match(/^[^a-z]+/i);
-
+        console.log(`ori:${current}`);
         var result = await translate(
           (prefix && current.substring(prefix[0].length, current.length)) ||
             current,
@@ -81,6 +68,7 @@ let translator = async filePath => {
           result = prefix[0] + result;
         }
         result += "(zh_CN)";
+        console.log(`result:${result}`);
 
         await sleep(500);
         break;
@@ -95,7 +83,7 @@ let translator = async filePath => {
       continue;
     }
     let tj = result.match(new RegExp("[\\u4E00-\\u9FFF]", "g"));
-    if (tj && tj.length < result.length / 2) {
+    if (tj && tj.length < result.length && tj.length < 2) {
       translated[i] = current + "\n";
       translatedCompare[i] = "";
       continue;
@@ -119,15 +107,36 @@ let translator = async filePath => {
       (translatedCompare[index] ? translatedCompare[index] : translated[index])
     );
   });
-  fs.writeFile(newPath, translated2.join(""), function(err) {
+  return translated2.join("");
+
+};
+function printPct(percentage) {
+  process.stdout.clearLine();
+  process.stdout.cursorTo(0);
+  process.stdout.write(percentage + "% complete");
+}
+let translator = async filePath => {
+  let baseName = path.win32.basename(filePath, ".md");
+  let newPath = path.join(filePath, "..", baseName + "-translated.md");
+  let lastIndex = baseName.lastIndexOf("-translated");
+  if (lastIndex > 0 && lastIndex === baseName.length - "-translated".length) {
+    return;
+  }
+  process.stdout.write(baseName + " translate start\n");
+  process.stdout.write("will export to \n" + newPath + "\n");
+  try {
+    var data = fs.readFileSync(filePath, "utf8");
+  } catch (err) {
+    console.log("Err wrong filePath\n" + err);
+    process.exit(1);
+  }
+  let translatedStr = await translateStr(data);
+  fs.writeFile(newPath, translatedStr, function(err) {
     if (err) process.stdout.write("\nwriteFile fail");
     else process.stdout.write("\nwriteFile complete");
   });
-  function printPct(percentage) {
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
-    process.stdout.write(percentage + "% complete");
-  }
+
 };
 
 module.exports = translator;
+module.exports.translateStr = translateStr
