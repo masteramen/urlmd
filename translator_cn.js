@@ -2,16 +2,13 @@ const path = require("path");
 var fs = require("fs");
 var sleep = require("./sleep");
 
-let translator = async filePath => {
+let translator = async (filePath, toFilePath = false) => {
   let baseName = path.win32.basename(filePath, ".md");
-  let newPath = path.join(filePath, "..", baseName + "-cn-translated.md");
-  let lastIndex = baseName.lastIndexOf("cn-translated");
-  if (
-    (lastIndex > 0 && lastIndex === baseName.length - "cn-translated".length) ||
-    !baseName.trim().endsWith("-translated")
-  ) {
-    return;
+  let newPath = toFilePath;
+  if (!newPath) {
+    newPath = path.join(filePath, "..", baseName + "-cn-translated.md");
   }
+
   process.stdout.write(baseName + " translate start\n");
   process.stdout.write("will export to \n" + newPath + "\n");
   try {
@@ -22,24 +19,15 @@ let translator = async filePath => {
   }
   let array = data.split("\n");
 
-  let translated = [];
-  let translatedCompare = [];
-
-  let translated2 = array.map((val, index) => {});
-
   let content = array.reduce((total, val, index, arr) => {
     if (index + 1 < arr.length && arr[index + 1].endsWith("(zh_CN)")) {
       return total;
-      /*return (total +=
-        "\n" +
-        arr[index + 1].substring(0, arr[index + 1].lastIndexOf("(zh_CN)")));
-    */
     } else {
       return total + "\n" + val.replace(/\(zh_CN\)$/, "");
     }
   }, "");
 
-  fs.writeFile(newPath, content, function(err) {
+  fs.writeFile(newPath, content.trim(), function(err) {
     if (err) process.stdout.write("\nwriteFile fail");
     else process.stdout.write("\nwriteFile complete");
   });

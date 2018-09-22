@@ -3,6 +3,8 @@ var path = require("path");
 var fs = require("fs");
 var md = require("./md");
 const { exec } = require("child_process");
+const chokidar = require("chokidar");
+const fm = require("front-matter");
 
 /*
 var globalTunnel = require('global-tunnel-ng');
@@ -77,7 +79,7 @@ app.get("/edit", function(req, res) {
   var isFile = stats.isFile();
   let result = `<html><head><script>alert('file not exists');window.close();</script></head><body></body></html>`;
   if (isFile) {
-    exec(`code ${filePath}`, (err, stdout, stderr) => {
+    exec(`code "${filePath}"`, (err, stdout, stderr) => {
       if (err) {
         // node couldn't execute the command
         return;
@@ -107,3 +109,50 @@ https.createServer(options, app).listen(3011, function() {
 */
 app.listen(3888, () => console.log("Example app listening on port 3000!"));
 //module.exports = app;
+
+var watcher = chokidar.watch("blog/_drafts", {
+  ignored: /[\/\\]\./,
+  persistent: true
+});
+var log = console.log.bind(console);
+
+watcher
+  .on("add", function(path) {
+    log("File", path, "has been added");
+  })
+  .on("addDir", function(path) {
+    log("Directory", path, "has been added");
+  })
+  .on("change", function(path) {
+    try {
+      var postfm = fm(fs.readFileSync(path, "utf8"));
+      if (postfm.attributes.published) {
+        var translator_cn = require("./translator_cn");
+
+        translator_cn(
+          path,
+          `blog/_posts/2000-01-01-${postfm.attributes.fileName}.md`
+        );
+      }
+      //console.log(postfm);
+    } catch (e) {
+      console.log(e);
+    }
+
+    log("File", path, "has been changed");
+  })
+  .on("unlink", function(path) {
+    log("File", path, "has been removed");
+  })
+  .on("unlinkDir", function(path) {
+    log("Directory", path, "has been removed");
+  })
+  .on("error", function(error) {
+    log("Error happened", error);
+  })
+  .on("ready", function() {
+    log("Initial scan complete. Ready for changes.");
+  })
+  .on("raw", function(event, path, details) {
+    log("Raw event info:", event, path, details);
+  });

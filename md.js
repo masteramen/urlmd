@@ -47,25 +47,30 @@ export function tomd(url) {
             let dateStr = `${date.getFullYear()}-${formate2(
               date.getMonth()
             )}-${formate2(date.getDate())}`;
-            let body = `---
-  layout: post
-  title:  "${cnTitle}"
-  title2:  "${article.title}"
-  date:   ${dateStr} ${timeStr}  +0800
-  source:  "${url}"
-  published: false
-  ---
-  {% raw %}
-  ${content.trim()}
-  {% endraw %}
-    `;
             let fileName = pinyin(cnTitle, { style: pinyin.STYLE_NORMAL })
               .join("-")
               .replace(/[^a-z0-9-]/gi, "-")
               .replace(/\-+/g, "-")
               .toLowerCase()
               .trim();
-            let filePath = `blog/_drafts/2000-01-01-${fileName}-draft.md`;
+            let body = `---
+  layout: post
+  title:  "${cnTitle}"
+  title2:  "${article.title}"
+  date:   ${dateStr} ${timeStr}  +0800
+  source:  "${url}"
+  fileName:  "${fileName}"
+  published: false
+  ---
+  {% raw %}
+  ${content.trim()}
+  {% endraw %}
+    `;
+
+            let filePath = `blog/_drafts/${article.title.replace(
+              /[/\\]/g,
+              " "
+            )}.md`;
             console.log(`filePaht:${filePath}`);
             fs.writeFile(filePath, body, function(err) {
               if (err) {
@@ -74,7 +79,7 @@ export function tomd(url) {
               } else process.stdout.write("\nwriteFile complete");
             });
 
-            exec(`code ${filePath}`, (err, stdout, stderr) => {
+            exec(`code "${filePath}"`, (err, stdout, stderr) => {
               if (err) {
                 // node couldn't execute the command
                 return;
