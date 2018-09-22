@@ -3,7 +3,7 @@ import read from "node-readability";
 import h2m from "h2m";
 import fs from "fs";
 import pinyin from "pinyin";
-import { translateStr } from "./translator";
+import { translateStr, translatePure } from "./translator";
 const { exec } = require("child_process");
 
 function formate2(d) {
@@ -18,7 +18,7 @@ export function tomd(url) {
       read(
         url,
         {
-          proxy: "http://192.168.1.30:8080/",
+          //proxy: "http://192.168.1.30:8080/",
           "User-Agent":
             "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
           Referer: url
@@ -33,10 +33,10 @@ export function tomd(url) {
           let content = h2m(article.content, {});
           console.log(content);
           resolve("processing");
-          (async data => {
+          (async () => {
             let content2 = await translateStr(content);
-            let cnTitle = await translateStr(article.title);
-            cnTitle = cnTitle.replace(/\n/g,'');
+            let cnTitle = await translatePure(article.title);
+            cnTitle = cnTitle.replace(/\n/g, "");
             content = content2;
             console.log(content);
             let date = new Date();
@@ -59,20 +59,14 @@ export function tomd(url) {
   ${content.trim()}
   {% endraw %}
     `;
-            let fileName = article.title.replace(/\//g, "");
-            fileName = fileName
-              .replace(/\s+/g, " ")
-              .replace(/\.+/g, "")
+            let fileName = pinyin(cnTitle, { style: pinyin.STYLE_NORMAL })
+              .join("-")
+              .replace(/[^a-z0-9-]/gi, "-")
+              .replace(/\-+/g, "-")
+              .toLowerCase()
               .trim();
-            let filePath = `blog/_drafts/2000-01-01-${fileName}d`
-              .replace(/\s+/g, "-")
-              .replace(/\-+/g, "-");
-            console.log(filePath);
-            filePath =
-              pinyin(filePath, { style: pinyin.STYLE_NORMAL }).join("-") +
-              ".md";
-            console.log("filePaht:");
-            console.log(filePath);
+            let filePath = `blog/_drafts/2000-01-01-${fileName}-draft.md`;
+            console.log(`filePaht:${filePath}`);
             fs.writeFile(filePath, body, function(err) {
               if (err) {
                 process.stdout.write("\nwriteFile fail");

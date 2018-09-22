@@ -2,6 +2,9 @@ var express = require("express");
 var path = require("path");
 var fs = require("fs");
 var md = require("./md");
+const { exec } = require("child_process");
+
+/*
 var globalTunnel = require('global-tunnel-ng');
 //http://proxy-tmg.wb.devb.hksarg:8080/
 globalTunnel.initialize({
@@ -10,6 +13,7 @@ globalTunnel.initialize({
 	  //proxyAuth: 'userId:password', // optional authentication
 	  //sockets: 50 // optional pool size for each http and https
 });
+*/
 var app = express();
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -26,10 +30,9 @@ app.get("/", function(req, res) {
   console.log(req.query.url);
   console.log(req.query);
 
-
   (async () => {
     try {
-      let result = await md.tomd(req.query.url,req.query.lang);
+      let result = await md.tomd(req.query.url, req.query.lang);
       result = `<html><head><script>alert("${result}");history.go(-1);</script></head></html>`;
       res.send(result);
     } catch (e) {
@@ -38,6 +41,56 @@ app.get("/", function(req, res) {
     }
   })();
 });
+
+app.get("/draft", function(req, res) {
+  let targetPath = "blog/_drafts";
+  var files = fs.readdirSync(targetPath);
+  let content = "";
+  for (let filename of files) {
+    var filedir = path.join(targetPath, filename);
+    var stats = fs.statSync(filedir);
+    var isFile = stats.isFile();
+    if (isFile) {
+      let published = false;
+      if (filename.endsWith("-published.md")) {
+        published = true;
+      }
+      console.log(`published:${published}`);
+
+      content += `<li>${filename}<a href="javascript:open('edit?fileName=${encodeURIComponent(
+        filename
+      )}','_blank')" >Edit</a></li>`;
+    }
+  }
+  let result = `<html><head></head><body>${content}</body></html>`;
+  res.send(result);
+});
+
+app.get("/edit", function(req, res) {
+  console.log(req.query.fileName);
+
+  let targetPath = "blog/_drafts";
+
+  let filename = req.query.fileName;
+  var filePath = path.join(targetPath, filename);
+  var stats = fs.statSync(filePath);
+  var isFile = stats.isFile();
+  let result = `<html><head><script>alert('file not exists');window.close();</script></head><body></body></html>`;
+  if (isFile) {
+    exec(`code ${filePath}`, (err, stdout, stderr) => {
+      if (err) {
+        // node couldn't execute the command
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+      console.log(`stderr: ${stderr}`);
+    });
+    result = `<html><head><script>window.close();</script></head><body></body></html>`;
+  }
+
+  res.send(result);
+});
+
 /*
 var https = require("https"),
   fs = require("fs");

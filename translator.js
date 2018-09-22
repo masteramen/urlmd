@@ -1,10 +1,15 @@
 const path = require("path");
 var fs = require("fs");
 var translate = require("./translate");
+//       const translate = require("google-translate-api-cn");
+
 var sleep = require("./sleep");
 
-let translateStr = async data => {
+let translatePure = async str => {
+  return await translate(str, { raw: true, to: "zh-CN" });
+};
 
+let translateStr = async data => {
   let array = data.split("\n");
   let isCode = false;
 
@@ -53,12 +58,11 @@ let translateStr = async data => {
       translatedCompare[i] = "";
       continue;
     }
-    let k = 0;
-    while (true) {
-      k += 1;
+    for (let k = 0; k < 5; k++) {
       try {
         let prefix = current.match(/^[^a-z]+/i);
         console.log(`ori:${current}`);
+
         var result = await translate(
           (prefix && current.substring(prefix[0].length, current.length)) ||
             current,
@@ -69,12 +73,10 @@ let translateStr = async data => {
         }
         result += "(zh_CN)";
         console.log(`result:${result}`);
-
-        await sleep(500);
+        //await sleep(500);
         break;
       } catch (err) {
         console.log("Err network error\n" + err);
-        if (k > 5) process.exit(1);
       }
     }
     if (!new RegExp("[\\u4E00-\\u9FFF]+", "g").test(result)) {
@@ -108,12 +110,12 @@ let translateStr = async data => {
     );
   });
   return translated2.join("");
-
 };
 function printPct(percentage) {
-  process.stdout.clearLine();
-  process.stdout.cursorTo(0);
-  process.stdout.write(percentage + "% complete");
+  // process.stdout.clearLine();
+  // process.stdout.cursorTo(0);
+  // process.stdout.write(percentage + "% complete");
+  console.log(percentage + "% complete");
 }
 let translator = async filePath => {
   let baseName = path.win32.basename(filePath, ".md");
@@ -135,8 +137,8 @@ let translator = async filePath => {
     if (err) process.stdout.write("\nwriteFile fail");
     else process.stdout.write("\nwriteFile complete");
   });
-
 };
 
 module.exports = translator;
-module.exports.translateStr = translateStr
+module.exports.translateStr = translateStr;
+module.exports.translatePure = translatePure;

@@ -18,6 +18,7 @@
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "global-tunnel-ng": "^2.6.0",
+    "google-translate-api-cn": "^1.0.1",
     "google-translate-token": "^1.0.0",
     "got": "^9.2.2",
     "pinyin": "^2.8.3",
