@@ -17,8 +17,11 @@ globalTunnel.initialize({
 });
 */
 var app = express();
+//app.use(express.static('public'))
 
 app.use(express.static(path.join(__dirname, "public")));
+app.set("view engine", "pug");
+
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -46,7 +49,22 @@ app.get("/", function(req, res) {
 
 app.get("/draft", function(req, res) {
   let targetPath = "blog/_drafts";
-  var files = fs.readdirSync(targetPath);
+  // var files = fs.readdirSync(targetPath);
+  var files = fs
+    .readdirSync(targetPath)
+    .map(function(v) {
+      return {
+        name: v,
+        time: fs.statSync(path.join(targetPath, v)).mtime.getTime()
+      };
+    })
+    .sort(function(a, b) {
+      return b.time - a.time;
+    })
+    .map(function(v) {
+      return v.name;
+    });
+  /*
   let content = "";
   for (let filename of files) {
     var filedir = path.join(targetPath, filename);
@@ -57,7 +75,6 @@ app.get("/draft", function(req, res) {
       if (filename.endsWith("-published.md")) {
         published = true;
       }
-      console.log(`published:${published}`);
 
       content += `<li>${filename}<a href="javascript:open('edit?fileName=${encodeURIComponent(
         filename
@@ -66,6 +83,8 @@ app.get("/draft", function(req, res) {
   }
   let result = `<html><head></head><body>${content}</body></html>`;
   res.send(result);
+  */
+  res.render("drafts", { title: "Drafts", fileNames: files });
 });
 
 app.get("/edit", function(req, res) {

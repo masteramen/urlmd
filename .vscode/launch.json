@@ -7,6 +7,13 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "tran-cn",
+      "program": "${workspaceFolder}/trans-md-cn.js",
+      "args": ["blog/_drafts/Visual Studio Code Extension Examples.md"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Launch Program",
       "program": "${workspaceFolder}/app.js",
       "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/babel-node",

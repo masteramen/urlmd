@@ -1,0 +1,8 @@
+html
+  head
+    title= title
+  body
+    ul
+        for fileName in fileNames
+            li
+                a(href='javascript:open("edit?fileName='+encodeURIComponent(fileName)+'","_blank");')=fileName

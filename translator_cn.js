@@ -19,13 +19,21 @@ let translator = async (filePath, toFilePath = false) => {
   }
   let array = data.split("\n");
 
-  let content = array.reduce((total, val, index, arr) => {
-    if (index + 1 < arr.length && arr[index + 1].endsWith("(zh_CN)")) {
-      return total;
+  let content = "";
+  for (let i = array.length - 1; i >= 0; i -= 1) {
+    let line = array[i];
+    if (line.endsWith("(zh_CN)")) {
+      content = line.replace(/\(zh_CN\)$/, "") + "\n" + content;
+      for (i -= 1; i >= 0; i -= 1) {
+        let line = array[i];
+        if (line.trim() !== "") {
+          break;
+        }
+      }
     } else {
-      return total + "\n" + val.replace(/\(zh_CN\)$/, "");
+      content = line + "\n" + content;
     }
-  }, "");
+  }
 
   fs.writeFile(newPath, content.trim(), function(err) {
     if (err) process.stdout.write("\nwriteFile fail");
