@@ -58,6 +58,12 @@ let translateStr = async data => {
       translatedCompare[i] = "";
       continue;
     }
+    if (current.match(/^\s{4}/)) {
+      translated[i] = current + "\n";
+      translatedCompare[i] = "";
+      continue;
+    }
+
     for (let k = 0; k < 5; k++) {
       try {
         let prefix = current.match(/^[^a-z]+/i);

@@ -35,7 +35,23 @@ layout: default
   <a class="next" href="{{page.next.url}}">{{page.next.title}} &raquo;</a>
   {% endif %}
 </div>
+<div class="sfix">
+  {%- include google-fixedme.html -%}
+</div>
+
 <style>
+  .wrapper {
+    position: relative;
+  }
+
+  .sfix {
+    position: absolute;
+    top: 0;
+    right: -240px;
+    width: 240px;
+    height: 600px;
+  }
+
   .PageNavigation {
     font-size: 14px;
     display: block;
