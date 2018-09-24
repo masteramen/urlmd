@@ -64,27 +64,33 @@ let translateStr = async data => {
       continue;
     }
 
-    for (let k = 0; k < 5; k++) {
-      try {
-        let prefix = current.match(/^[^a-z]+/i);
-        console.log(`ori:${current}`);
-
-        var result = await translate(
-          (prefix && current.substring(prefix[0].length, current.length)) ||
-            current,
-          { raw: true, to: "zh-CN" }
-        );
-        if (prefix) {
-          result = prefix[0] + result;
-        }
-        result += "(zh_CN)";
-        console.log(`result:${result}`);
-        //await sleep(500);
-        break;
-      } catch (err) {
-        console.log("Err network error\n" + err);
+    let textBlock = current.replace(/(`.*?`)/g, "\n$1\n");
+    let textSegs = textBlock.split("\n");
+    console.log(`ori:${current}`);
+    let translateTextResults = [];
+    for (let text of textSegs) {
+      if (text.trim().match(/`.*?`/)) {
+        translateTextResults.push(text);
+        continue;
       }
+      let prefix = text.match(/^[^a-z]+/i);
+      if (prefix) {
+        text = text.substring(prefix[0].length, text.length);
+      }
+      let textResult = text;
+      if (text) {
+        textResult = await translate(text, { raw: true, to: "zh-CN" });
+      }
+      if (prefix) {
+        textResult = prefix[0] + textResult;
+      }
+      translateTextResults.push(textResult);
+      //await sleep(500);
     }
+
+    let result = translateTextResults.join("") + "(zh_CN)";
+    console.log(`result:${result}`);
+
     if (!new RegExp("[\\u4E00-\\u9FFF]+", "g").test(result)) {
       translated[i] = current + "\n";
       translatedCompare[i] = "";

@@ -52,7 +52,9 @@ export function tomd(url) {
               .replace(/[^a-z0-9-]/gi, "-")
               .replace(/\-+/g, "-")
               .toLowerCase()
-              .trim();
+              .trim()
+              .replace(/[^a-z0-9]+$/i, "")
+              .replace(/^[^a-z0-9]+/i, "");
             let body = `---
   layout: post
   title:  "${cnTitle}"
