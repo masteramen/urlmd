@@ -28,7 +28,7 @@
 
         window.onscroll = function (event) {
             var e = document.getElementsByClassName('sfix')[0];
-            if (window.scrollY && e.offset && window.scrollY > e.offset.top) {
+            if (window.pageYOffset && e.offset && window.pageYOffset > e.offset.top) {
                 e.style.position = 'fixed';
                 e.style.left = e.offset.left + 'px';
                 e.style.right = 'auto';
