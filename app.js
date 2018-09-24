@@ -48,7 +48,7 @@ app.get("/", function(req, res) {
 });
 
 app.get("/draft", function(req, res) {
-  let targetPath = "blog/_drafts";
+  let targetPath = "jekyll/_drafts";
   // var files = fs.readdirSync(targetPath);
   var files = fs
     .readdirSync(targetPath)
@@ -90,7 +90,7 @@ app.get("/draft", function(req, res) {
 app.get("/edit", function(req, res) {
   console.log(req.query.fileName);
 
-  let targetPath = "blog/_drafts";
+  let targetPath = "jekyll/_drafts";
 
   let filename = req.query.fileName;
   var filePath = path.join(targetPath, filename);
@@ -129,7 +129,7 @@ https.createServer(options, app).listen(3011, function() {
 app.listen(3888, () => console.log("Example app listening on port 3000!"));
 //module.exports = app;
 
-var watcher = chokidar.watch("blog/_drafts", {
+var watcher = chokidar.watch("jekyll/_drafts", {
   ignored: /[\/\\]\./,
   persistent: true
 });
@@ -150,7 +150,7 @@ watcher
 
         translator_cn(
           path,
-          `blog/_posts/2000-01-01-${postfm.attributes.fileName}.md`
+          `jekyll/_posts/2000-01-01-${postfm.attributes.fileName}.md`
         );
       }
       //console.log(postfm);

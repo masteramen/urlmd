@@ -69,7 +69,7 @@ export function tomd(url) {
   {% endraw %}
     `;
 
-            let filePath = `blog/_drafts/${article.title.replace(
+            let filePath = `jekyll/_drafts/${article.title.replace(
               /[/\\]/g,
               " "
             )}.md`;
