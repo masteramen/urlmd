@@ -31,7 +31,7 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.get("/", function(req, res) {
+app.get("/act", function(req, res) {
   console.log(req.query.url);
   console.log(req.query);
 
@@ -47,7 +47,7 @@ app.get("/", function(req, res) {
   })();
 });
 
-app.get("/draft", function(req, res) {
+app.get("/", function(req, res) {
   let targetPath = "jekyll/_drafts";
   // var files = fs.readdirSync(targetPath);
   var files = fs
