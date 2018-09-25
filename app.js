@@ -145,13 +145,19 @@ watcher
   .on("change", function(path) {
     try {
       var postfm = fm(fs.readFileSync(path, "utf8"));
-      if (postfm.attributes.published) {
-        var translator_cn = require("./translator_cn");
-
-        translator_cn(
-          path,
-          `jekyll/_posts/2000-01-01-${postfm.attributes.fileName}.md`
-        );
+      let published = postfm.attributes.published;
+      if (published === true) {
+        let postFilePath = `jekyll/_posts/2000-01-01-${
+          postfm.attributes.fileName
+        }.md`;
+        if (postfm.attributes.lang !== "zh_CN") {
+          var translator_cn = require("./translator_cn");
+          translator_cn(path, postFilePath);
+        } else {
+          fs.createReadStream(path).pipe(fs.createWriteStream(postFilePath));
+        }
+      } else if (published === "deleted") {
+        fs.unlink(path);
       }
       //console.log(postfm);
     } catch (e) {
