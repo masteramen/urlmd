@@ -7,6 +7,12 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "test read",
+      "program": "${workspaceFolder}/test/testread.js"
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "tran-cn",
       "program": "${workspaceFolder}/trans-md-cn.js",
       "args": ["blog/_drafts/Visual Studio Code Extension Examples.md"]
