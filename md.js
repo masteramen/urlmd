@@ -34,10 +34,19 @@ export function tomd(url) {
           console.log(content);
           resolve("processing");
           (async () => {
-            let content2 = await translateStr(content);
-            let cnTitle = await translatePure(article.title);
+            let cnTitle = article.title;
+            let lang = "en";
+            if (
+              content.search(new RegExp("[\\u4E00-\\u9FFF]")) === -1 &&
+              cnTitle.search(new RegExp("[\\u4E00-\\u9FFF]")) === -1
+            ) {
+              content = await translateStr(content);
+              cnTitle = await translatePure(article.title);
+            } else {
+              lang = "zh_CN";
+            }
+
             cnTitle = cnTitle.replace(/\n/g, "");
-            content = content2;
             console.log(content);
             let date = new Date();
             let timeStr = `${formate2(date.getUTCHours())}:${formate2(
@@ -62,6 +71,7 @@ export function tomd(url) {
   date:   ${dateStr} ${timeStr}  +0800
   source:  "${url}"
   fileName:  "${fileName}"
+  lang:  "${lang}"
   published: false
   ---
   {% raw %}
