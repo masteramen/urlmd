@@ -5,17 +5,16 @@ var md = require("./md");
 const { exec } = require("child_process");
 const chokidar = require("chokidar");
 const fm = require("front-matter");
-
-/*
-var globalTunnel = require('global-tunnel-ng');
+const request = require("request");
+var globalTunnel = require("global-tunnel-ng");
 //http://proxy-tmg.wb.devb.hksarg:8080/
 globalTunnel.initialize({
-	  host: '192.168.1.30',
-	  port: 8080,
-	  //proxyAuth: 'userId:password', // optional authentication
-	  //sockets: 50 // optional pool size for each http and https
+  host: "192.168.1.30",
+  port: 8080
+  //proxyAuth: 'userId:password', // optional authentication
+  //sockets: 50 // optional pool size for each http and https
 });
-*/
+
 var app = express();
 //app.use(express.static('public'))
 
@@ -146,8 +145,10 @@ watcher
     try {
       var postfm = fm(fs.readFileSync(path, "utf8"));
       let published = postfm.attributes.published;
+      let date = new Date(postfm.attributes.date);
       if (published === true) {
-        let postFilePath = `jekyll/_posts/2000-01-01-${
+        let folder = `jekyll/_posts/${date.getFullYear()}/`;
+        let postFilePath = `${folder}/2000-01-01-${
           postfm.attributes.fileName
         }.md`;
         if (postfm.attributes.lang !== "zh_CN") {
@@ -156,6 +157,31 @@ watcher
         } else {
           fs.createReadStream(path).pipe(fs.createWriteStream(postFilePath));
         }
+        let fileContent = fs.readFileSync(path, "utf8");
+        let data = fileContent.split("\n");
+        let afterProcessData = [];
+        let encodeUrls =[];
+        for (let line of data) {
+          line = line.replace(/(!\[.*?\]\()(.*?)(\))/,(match, p1, p2,p3,offset, string)=>{ 
+            let urlparts = p3.split('.');
+            let encodeUrl = new Buffer(p2).toString('base64')+"."+urlparts.length>1?urlparts.pop():"";
+            encodeUrls.push({ori:p2,encode:encodeUrl});
+            return p1+encodeUrl+p3});
+
+          afterProcessData.push(line);
+        };
+        (async()=>{
+          for(let iIndex=0;iIndex<encodeUrls.length;iIndex++){
+            let {ori,encode} = encodeUrls[iIndex];
+            console.log(ori)
+            await request(ori).pipe(fs.createWriteStream(folder+encode))
+          }
+
+          fs.writeFile(postFilePath, afterProcessData.join("\n").trim(), function(
+            err
+          ) {});
+        })();
+
       } else if (published === "deleted") {
         fs.unlink(path);
       }

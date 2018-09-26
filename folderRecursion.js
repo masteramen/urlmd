@@ -1,6 +1,7 @@
 const path = require('path')
 var fs = require('fs')
 var translator = require('./translator')
+fs.statSync("jekyll/_drafts/Better JavaScript with ESlint, Airbnb, & Prettier.md");
 let folderRecursion = async function (targetPath) {
   var files = fs.readdirSync(targetPath)
   for (filename of files) {

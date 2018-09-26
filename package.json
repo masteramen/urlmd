@@ -27,6 +27,7 @@
     "node-readability": "git+https://github.com/masteramen/readability.git",
     "pinyin": "^2.8.3",
     "querystring": "^0.2.0",
+    "request": "^2.88.0",
     "safe-eval": "^0.4.1",
     "tunnel-agent": "^0.6.0",
     "yaml-front-matter": "^4.0.0"

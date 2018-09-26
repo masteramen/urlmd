@@ -7,6 +7,13 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "tran-md",
+      "program": "${workspaceFolder}/trans-md.js",
+      "args": ["jekyll/_drafts/"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "test read",
       "program": "${workspaceFolder}/test/testread.js"
     },
