@@ -8,14 +8,13 @@ const fm = require("front-matter");
 const request = require("request");
 var globalTunnel = require("global-tunnel-ng");
 //http://proxy-tmg.wb.devb.hksarg:8080/
-/*
 globalTunnel.initialize({
   host: "192.168.1.30",
   port: 8080
   //proxyAuth: 'userId:password', // optional authentication
   //sockets: 50 // optional pool size for each http and https
 });
-*/
+
 var app = express();
 //app.use(express.static('public'))
 
@@ -134,7 +133,11 @@ var watcher = chokidar.watch("jekyll/_drafts", {
   persistent: true
 });
 var log = console.log.bind(console);
-
+let timeIndex = +new Date();
+function getNextId(){
+  timeIndex++;
+  return timeIndex;
+}
 watcher
   .on("add", function(path) {
     log("File", path, "has been added");
@@ -148,7 +151,13 @@ watcher
       let published = postfm.attributes.published;
       let date = new Date(postfm.attributes.date);
       if (published === true) {
-        let folder = `jekyll/_posts/${date.getFullYear()}`;
+        let folder = `jekyll/_posts/${date.getFullYear()}/`;
+
+        if (!fs.existsSync(folder)){
+          fs.mkdirSync(folder);
+        }
+
+        let draftFolder = `jekyll/_drafts/`;
         let postFilePath = `${folder}/2000-01-01-${
           postfm.attributes.fileName
         }.md`;
@@ -161,41 +170,60 @@ watcher
         let fileContent = fs.readFileSync(path, "utf8");
         let data = fileContent.split("\n");
         let afterProcessData = [];
-        let encodeUrls = [];
+        let encodeUrls =[];
         for (let line of data) {
-          line = line.replace(
-            /(!\[.*?\]\()(.*?)(\))/,
-            (match, p1, p2, p3, offset, string) => {
-              let urlparts = p3.split(".");
-              let encodeUrl =
-                new Buffer(p2).toString("base64") + "." \\\.length > 1
-                  ? urlparts.pop()
-                  : "";
-              console.log("encodeUrl:" + encodeUrl);
-              encodeUrls.push({ ori: p2, encode: encodeUrl });
-              return p1 + encodeUrl + p3;
-            }
-          );
+          line = line.replace(/(!\[.*?\]\()(.*?)(\))/,(match, p1, p2,p3,offset, string)=>{ 
+           
+              let urlparts = p2.split('.');
+              let encodeUrl = p2.replace(/[\s-]+/g,'');
+              if(p2.match(/^http[s]?:\/\//)){
+               // encodeUrl= new Buffer(p2).toString('base64')+(urlparts.length>1?"."+urlparts.pop():"");
+               // encodeUrl = encodeUrl.replace(/=+/g,"");
+               encodeUrl = getNextId() + (urlparts.length>1?"."+urlparts.pop():"");
+              }else {
+                if(encodeUrl!==p2 && fs.existsSync(draftFolder+p2)){
+                  fs.renameSync(`${draftFolder}/${p2}`, `${draftFolder}/${encodeUrl}`);
+                }
+              }
+
+              console.log(`p2:${p2} encodeUrl:${encodeUrl}`);
+
+              encodeUrls.push({ori:p2,encode:encodeUrl});
+              return p1+encodeUrl+p3;
+           
+
+          });
 
           afterProcessData.push(line);
-        }
-        (async () => {
-          for (let iIndex = 0; iIndex < encodeUrls.length; iIndex++) {
-            let { ori, encode } = encodeUrls[iIndex];
-            console.log(ori);
-            let dest = folder + "/" + encode;
-            console.log("dest:" + dest);
-            await request(ori).pipe(fs.createWriteStream(dest));
-          }
-          console.log(postFilePath);
-          fs.writeFile(
-            postFilePath,
-            afterProcessData.join("\n").trim(),
-            function(err) {
-              console.log(err);
+        };
+
+        (async()=>{
+          let needUpdateDraft = false;
+          for(let iIndex=0;iIndex<encodeUrls.length;iIndex++){
+            let {ori,encode} = encodeUrls[iIndex];
+            console.log(ori)
+            if(ori.match(/^http[s]?:\/\//)){
+              needUpdateDraft=true;
+              await request(ori)
+              .pipe(fs.createWriteStream(draftFolder+encode));
+              //.pipe(fs.createWriteStream(folder+encode))
+            }else if(fs.existsSync(draftFolder+ori)){
+              var stream = fs.createReadStream(draftFolder+ori);
+              stream.pipe(fs.createWriteStream(folder+encode));
             }
-          );
+          }
+          if(needUpdateDraft){
+            fs.writeFile(path, afterProcessData.join("\n").trim(), function(
+              err
+            ) {});
+          }else{
+            fs.writeFile(postFilePath, afterProcessData.join("\n").trim(), function(
+              err
+            ) {});
+          }
+
         })();
+
       } else if (published === "deleted") {
         fs.unlink(path);
       }
