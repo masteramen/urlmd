@@ -1,16 +1,15 @@
-//import copyPaste from "copy-paste";
 import read from "node-readability";
 import h2m from "h2m";
 import fs from "fs";
-import pinyin from "pinyin";
 import { translateStr, translatePure } from "./translator";
+import md5 from "./md5";
+
 const { exec } = require("child_process");
 
 function formate2(d) {
   return ("0" + d).substr(-2, 2);
 }
 export function tomd(url) {
-  //let content = copyPaste.paste();
 
   return new Promise((resolve, reject) => {
     console.log(url);
@@ -24,8 +23,7 @@ export function tomd(url) {
           Referer: url
         },
         function(err, article, meta) {
-          //console.log(err);
-          //console.log(meta);
+
           if (err) {
             return reject("fail: " + err);
           }
@@ -46,60 +44,37 @@ export function tomd(url) {
               lang = "zh_CN";
             }
 
-            cnTitle = cnTitle.replace(/\n/g, "");
+            cnTitle = cnTitle.replace(/[\n\r]/g, "");
             console.log(content);
             let date = new Date();
-            let timeStr = `${formate2(date.getUTCHours())}:${formate2(
-              date.getMinutes()
-            )}:${formate2(date.getSeconds())}`;
 
-            let dateStr = `${date.getFullYear()}-${formate2(
-              date.getMonth()
-            )}-${formate2(date.getDate())}`;
-            let fileName = pinyin(cnTitle, { style: pinyin.STYLE_NORMAL })
-              .join("-")
-              .replace(/[^a-z0-9-]/gi, "-")
-              .replace(/\-+/g, "-")
-              .toLowerCase()
-              .trim()
-              .replace(/[^a-z0-9]+$/i, "")
-              .replace(/^[^a-z0-9]+/i, "");
+            let fileName = md5(url);
             let body = `---
-  layout: post
-  title:  "${cnTitle}"
-  title2:  "${article.title}"
-  date:   ${dateStr} ${timeStr}  +0800
-  source:  "${url}"
-  fileName:  "${fileName}"
-  lang:  "${lang}"
-  published: false
-  ---
-  {% raw %}
-  ${content.trim()}
-  {% endraw %}
-    `;
-
-            let filePath = `jekyll/_drafts/${article.title.replace(
+layout: post
+title:  "${cnTitle}"
+title2:  "${article.title}"
+date:   ${formatDateTime(date)}
+source:  "${url}"
+fileName:  "${fileName}"
+lang:  "${lang}"
+published: false
+---
+{% raw %}
+${content.trim()}
+{% endraw %}
+`;
+            let draftFolder = `jekyll/_drafts/${fileName}/`;
+            let filePath = `${draftFolder}${article.title.replace(
               /[/\\]/g,
               " "
             )}.md`;
+            if (!fs.existsSync(draftFolder)) {
+              fs.mkdirSync(draftFolder);
+            }
             console.log(`filePaht:${filePath}`);
-            fs.writeFile(filePath, body, function(err) {
-              if (err) {
-                process.stdout.write("\nwriteFile fail");
-                console.log(err);
-              } else process.stdout.write("\nwriteFile complete");
-            });
+            fs.writeFileSync(filePath, body);
 
-            exec(`code "${filePath}"`, (err, stdout, stderr) => {
-              if (err) {
-                // node couldn't execute the command
-                return;
-              }
-
-              console.log(`stdout: ${stdout}`);
-              console.log(`stderr: ${stderr}`);
-            });
+            exec(`code "${filePath}"`, (err, stdout, stderr) => {});
           })();
         }
       );
@@ -107,4 +82,15 @@ export function tomd(url) {
       return reject("fail: " + url);
     }
   });
+}
+function formatDate(date) {
+  let timeStr = `${formate2(date.getUTCHours())}:${formate2(date.getMinutes())}:${formate2(date.getSeconds())}`;
+  let dateStr = `${date.getFullYear()}-${formate2(date.getMonth())}-${formate2(date.getDate())}`;
+  return { dateStr, timeStr };
+}
+
+function formatDateTime(date) {
+  let timeStr = `${formate2(date.getUTCHours())}:${formate2(date.getMinutes())}:${formate2(date.getSeconds())}`;
+  let dateStr = `${date.getFullYear()}-${formate2(date.getMonth())}-${formate2(date.getDate())}`;
+  return `${dateStr} ${timeStr}  +0800`;
 }
