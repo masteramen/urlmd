@@ -7,14 +7,19 @@ const chokidar = require("chokidar");
 const fm = require("front-matter");
 const request = require("request");
 const md5 = require("./md5");
+const shell = require("shelljs");
+
+const _drafts = "jekyll/_drafts";
+const _posts = "jekyll/_posts";
+
 var globalTunnel = require("global-tunnel-ng");
 //http://proxy-tmg.wb.devb.hksarg:8080/
-globalTunnel.initialize({
-  host: "192.168.1.30",
-  port: 8080
+/*globalTunnel.initialize({
+  //host: "192.168.1.30",
+  //port: 8080
   //proxyAuth: 'userId:password', // optional authentication
   //sockets: 50 // optional pool size for each http and https
-});
+});*/
 function getPostFile(dir) {
   //console.log('Starting from dir '+startPath+'/');
 
@@ -51,16 +56,20 @@ app.use(function(req, res, next) {
 });
 
 app.get("/act", function(req, res) {
-  console.log(req.query.url);
-  console.log(req.query);
+  const url = req.query.url;
+  console.log(url);
+  const glob = require("glob");
 
   (async () => {
-    try {
-      let result = await md.tomd(req.query.url, req.query.lang);
-      result = `<html><head><script>alert("${result}");history.go(-1);</script></head></html>`;
+    let first = glob.sync(`${_posts}/**/*${md5(url)}.md`);
+    if (first.length > 0) {
+      console.log(first[0]);
+      let result = `<html><head><script>history.go(-1);</script></head></html>`;
       res.send(result);
-    } catch (e) {
-      let result = `<html><head><script>alert("${e}");history.go(-1);</script></head></html>`;
+      exec(`code ${first[0]}`);
+    } else {
+      let result = await md.tomd(url, req.query.lang);
+      result = `<html><head><script>alert("${result}");history.go(-1);</script></head></html>`;
       res.send(result);
     }
   })();
@@ -135,16 +144,17 @@ watcher
     (async () => {
       try {
         var postfm = fm(fs.readFileSync(path, "utf8"));
-        let { published, fileName, date } = postfm.attributes;
+        let { published, fileName, date, source } = postfm.attributes;
         date = new Date(date);
         let folder = `jekyll/_posts/${date.getFullYear()}/${fileName}/`;
         let draftFolder = `jekyll/_drafts/${fileName}/`;
-        let postFilePath = `${folder}${date.getFullYear()}-${(
+        let postFileName = `${date.getFullYear()}-${(
           "0" + date.getMonth()
         ).substr(-2, 2)}-${("0" + date.getDate()).substr(
           -2,
           2
         )}-${fileName}.md`;
+        let postFilePath = `${folder}${postFileName}`;
 
         if (published === true) {
           makeSureFolderExists(folder);
@@ -152,9 +162,9 @@ watcher
           let fileContent = fs.readFileSync(path, "utf8");
           let data = fileContent.split("\n");
           let afterProcessData = [];
-          let encodeUrls = [];
           let downloadedUrls = [];
-
+          let allPostFiles = [];
+          // download remote resource to _posts
           for (let i = 0; i < data.length; i++) {
             let line = data[i];
             let result;
@@ -163,61 +173,53 @@ watcher
               // console.log(result, myRegexp.lastIndex);
               let url = result[2];
               console.log(url);
-              let urlparts = url.split(".");
-              if (url.match(/^http[s]?:\/\//) && downloadedUrls.indexOf(url)==-1) {
-                let md5url = md5(url) + (urlparts.length > 1 ? "." + urlparts.pop() : "");
-                try{
-                  await request(url).pipe(fs.createWriteStream(folder + md5url));
+              if (
+                url.match(/^http[s]?:\/\//) &&
+                downloadedUrls.indexOf(url) === -1
+              ) {
+                let md5FileName = getImageMd5FileName(url, fileName);
+                let resFilePath = folder + md5FileName;
+                try {
+                  if (!fs.existsSync(resFilePath)) {
+                    console.log(`download resource ${url} to ${resFilePath}`);
+                    await request({
+                      url: url,
+                      headers: {
+                        referer: source,
+                        "user-agent":
+                          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"
+                      }
+                    }).on("response", function(r) {
+                      if (r.statusCode === 200) {
+                        r.pipe(fs.createWriteStream(resFilePath));
+                      } else {
+                        console.log(`status code :${r.statusCode}`);
+                      }
+                    });
+                  } else {
+                    console.log(`resource ${url} exists in ${resFilePath}`);
+                  }
                   downloadedUrls.push(url);
-
-                }catch(e){
-
+                } catch (e) {
+                  console.log(`download resource ${url} fail:` + e);
                 }
-
               }
             }
-
-            line = line.replace(/(!\[.*?\]\()(.*?)(\))/,(match, p1, url, p3, offset, string) => {
-                let urlparts = url.split(".");
-                let encodeUrl = url;
-                if (url.match(/^http[s]?:\/\//) && downloadedUrls.indexOf(url)!==-1) {
-                  encodeUrl = md5(url) + (urlparts.length > 1 ? "." + urlparts.pop() : "");
-                }
-
-                console.log(`p2:${url} encodeUrl:${encodeUrl}`);
-
-                encodeUrls.push({ ori: url, encode: encodeUrl });
-                return p1 + encodeUrl + p3;
-              }
-            );
-
-            afterProcessData.push(line);
-          }
-
-          /*for (let iIndex = 0; iIndex < encodeUrls.length; iIndex++) {
-            let { ori, encode } = encodeUrls[iIndex];
-            console.log(ori);
-            if (ori.match(/^http[s]?:\/\//)) {
-              needUpdateDraft = true;
-              await request(ori).pipe(
-                fs.createWriteStream(draftFolder + encode)
-              );
-            }
-          }*/
-          for (let line of data) {
+            // replace remote resource to local
             line = line.replace(
               /(!\[.*?\]\()(.*?)(\))/,
-              (match, p1, p2, p3, offset, string) => {
-                let encodeUrl = fileName + "-" + p2;
-
-                console.log(`p2:${p2} encodeUrl:${encodeUrl}`);
-                if (
-                  fs.existsSync(draftFolder + p2) &&
-                  !fs.existsSync(folder + encodeUrl)
-                ) {
-                  var stream = fs.createReadStream(draftFolder + p2);
-                  stream.pipe(fs.createWriteStream(folder + encodeUrl));
+              (match, p1, url, p3, offset, string) => {
+                let encodeUrl = getImageMd5FileName(url, fileName);
+                allPostFiles.push(encodeUrl);
+                const draftPath = draftFolder + encodeUrl;
+                const postPath = folder + encodeUrl;
+                if (fs.existsSync(draftPath) && !fs.existsSync(postPath)) {
+                  fs.createReadStream(draftPath).pipe(
+                    fs.createWriteStream(postPath)
+                  );
+                  console.log(`copy res from ${draftPath} to ${postPath}`);
                 }
+                console.log(`url ${url} replace to ${encodeUrl}`);
 
                 return p1 + encodeUrl + p3;
               }
@@ -233,6 +235,14 @@ watcher
             console.log(`translate to :${postFilePath}`);
             translator_cn(postFilePath, postFilePath);
           }
+          allPostFiles.push(postFileName);
+          shell
+            .ls(folder)
+            .filter(it => allPostFiles.indexOf(it) === -1)
+            .forEach(it => {
+              console.log(`remove file ${folder}${it}`);
+              shell.rm(folder + it);
+            });
         } else if (published === "deleted") {
           deleteDraft(path);
         }
@@ -259,10 +269,15 @@ watcher
   .on("raw", function(event, path, details) {
     log("Raw event info:", event, path, details);
   });
-function makeSureFolderExists(folder) {
-  if (!fs.existsSync(folder)) {
-    fs.mkdirSync(folder);
+function getImageMd5FileName(url, fileName) {
+  let subfix = url.split(".").pop();
+  if (subfix.length > 4) {
+    subfix = "";
   }
+  return `${md5(url)}${subfix}`;
+}
+function makeSureFolderExists(folder) {
+  shell.mkdir("-p", folder);
 }
 
 function deleteDraft(path) {
