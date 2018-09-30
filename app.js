@@ -64,15 +64,23 @@ app.get("/act", function(req, res) {
     let first = glob.sync(`${_posts}/**/*${md5(url)}.md`);
     if (first.length > 0) {
       console.log(first[0]);
-      let result = `<html><head><script>history.go(-1);</script></head></html>`;
+      let result = `<html><head><script>history.go(-2);</script></head></html>`;
       res.send(result);
       exec(`code ${first[0]}`);
     } else {
-      let result = await md.tomd(url, req.query.lang);
-      result = `<html><head><script>alert("${result}");history.go(-1);</script></head></html>`;
+      md.tomd(url, req.query.lang);
+      let result = `<html><head><script>history.go(-2);</script></head></html>`;
       res.send(result);
     }
   })();
+});
+
+app.get("/hello", function(req, res) {
+  const url = req.query.url;
+  //console.log(url);
+  console.log(req.host);
+
+  res.render("hello", { url: url, draft_url: "http://localhost:3888" });
 });
 
 app.get("/", function(req, res) {
