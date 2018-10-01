@@ -286,22 +286,31 @@ watcher
     log("Raw event info:", event, filePath, details);
   });
 
-setInterval(() => {
-  if (shell.exec("git pull", { cwd: "jekyll" }).code !== 0) {
-    shell.echo(`${new Date()} Error: Git pull jekyll failed`);
-    shell.exit(1);
-  } else if (
-    shell.exec(`git commit -am "Auto-commit ${new Date()}"`).code !== 0
+function pullcommitpush(cwd) {
+  if (shell.exec("git pull", { cwd }).code !== 0) {
+    shell.echo(`${new Date()} Error: Git pull ${cwd} failed`);
+    return 1;
+  }
+  if (
+    shell.exec(`git commit -am "Auto-commit ${new Date()}"`, { cwd }).code !== 0
   ) {
-    shell.echo("Error: Git commit jekyll failed");
-    shell.exit(1);
-  } else {
-    if (shell.exec(`build.sh`).code !== 0) {
+    shell.echo(`${new Date()} Error: Git commit ${cwd} failed`);
+    return 1;
+  }
+  if (shell.exec(`git push`, { cwd }).code !== 0) {
+    shell.echo(`${new Date()} Error: Git push ${cwd} failed`);
+    return 1;
+  }
+
+  return 0;
+}
+
+setInterval(() => {
+  if (pullcommitpush("jekyll")) {
+    if (shell.exec(`./build.sh`).code !== 0) {
       shell.echo(`${new Date()} build failed`);
-    } else if (shell.exec("git pull", { cwd: "site" }).code !== 0) {
-      shell.echo(`${new Date()} Error: Git pull site failed`);
-      shell.exit(1);
+    } else if (pullcommitpush("site") === 0) {
+      console.log(`${new Date()} upload success`);
     }
-    console.log(`${new Date()} git commit success`);
   }
 }, 1000 * 60 * 1);
