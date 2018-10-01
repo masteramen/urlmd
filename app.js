@@ -305,12 +305,10 @@ function pullcommitpush(cwd) {
   return 0;
 }
 
-setInterval(() => {
-  if (pullcommitpush("jekyll")) {
-    if (shell.exec(`./build.sh`).code !== 0) {
-      shell.echo(`${new Date()} build failed`);
-    } else if (pullcommitpush("site") === 0) {
-      console.log(`${new Date()} upload success`);
-    }
-  }
-}, 1000 * 60 * 1);
+function build(time) {
+  setTimeout(() => {
+    shell.exec(`./build.sh`);
+    build(time);
+  }, time);
+}
+build(1000 * 60 * 1);

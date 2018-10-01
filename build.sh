@@ -2,19 +2,39 @@
 
 
 cd jekyll
-git pull || (echo "fail to pull jekyll $(date)" && exit 1)
-git commit -am "auto commit $(date)"  || (echo "fail to commit jekyll $(date)" && exit 1)
-git push  || (echo "fail to push jekyll $(date)" && exit 1)
+git pull 
 
+git commit -am "auto commit $(date)" 
+if [ "$?" -ne "0" ]; then  
+  echo "$(date "+%Y-%m-%d %H:%M:%S") - fail to commit jekyll" && exit 1
+fi
+
+git push
+
+if [ "$?" -ne "0" ]; then  
+  echo "$(date "+%Y-%m-%d %H:%M:%S") - fail to push jekyll" && exit 1
+fi
 
 cd ..
 
-JEKYLL_ENV=production jekyll build --config jekyll/_config_local.yml -s jekyll -d site || (echo "fail to build jekyll $(date)" && exit 1)
+JEKYLL_ENV=production jekyll build --config jekyll/_config_local.yml -s jekyll -d site
+
+if [ "$?" -ne "0" ]; then  
+echo "$(date "+%Y-%m-%d %H:%M:%S") - fail to build jekyll" && exit 1
+fi
 
 cd site
-git pull || (echo "fail to pull site $(date)" && exit 1)
-git commit -am "auto commit $(date)"  || (echo "fail to commit site $(date)" && exit 1)
-git push  || (echo "fail to push site $(date)" && exit 1)
+git pull
+git commit -am "auto commit $(date "+%Y-%m-%d %H:%M:%S")"
+if [ "$?" -ne "0" ]; then  
+ "$(date "+%Y-%m-%d %H:%M:%S") - fail to commit site" && exit 1
+fi
+
+git push
+if [ "$?" -ne "0" ]; then  
+echo "$(date "+%Y-%m-%d %H:%M:%S") - fail to push site" && exit 1
+fi
 cd ..
 echo "success build and push site"
+echo 
 exit 0
