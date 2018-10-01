@@ -17,6 +17,8 @@ fi
 
 cd ..
 
+docker exec jk /urlmd/buildJK.sh
+
 JEKYLL_ENV=production jekyll build --config jekyll/_config_local.yml -s jekyll -d site
 
 if [ "$?" -ne "0" ]; then  
