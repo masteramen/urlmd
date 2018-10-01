@@ -296,7 +296,9 @@ setInterval(() => {
     shell.echo("Error: Git commit failed");
     shell.exit(1);
   } else {
-    shell.exec(`build.sh`);
+    if (shell.exec(`build.sh`).code !== 0) {
+      shell.echo(`${new Date()} build failed`);
+    }
     console.log(`${new Date()} git commit success`);
   }
 }, 1000 * 60 * 1);
