@@ -7,25 +7,33 @@ import md5 from "./md5";
 const { exec } = require("child_process");
 
 function formate2(d) {
-  return ("0" + d).substr(-2, 2);
+  return `0${d}`.substr(-2, 2);
 }
-export function tomd(url) {
 
+function formatDateTime(date) {
+  const timeStr = `${formate2(date.getUTCHours())}:${formate2(
+    date.getMinutes()
+  )}:${formate2(date.getSeconds())}`;
+  const dateStr = `${date.getFullYear()}-${formate2(
+    date.getMonth()
+  )}-${formate2(date.getDate())}`;
+  return `${dateStr} ${timeStr}  +0800`;
+}
+export default function tomd(url) {
   return new Promise((resolve, reject) => {
     console.log(url);
     if (url) {
       read(
         url,
         {
-          //proxy: "http://192.168.1.30:8080/",
+          // proxy: "http://192.168.1.30:8080/",
           "User-Agent":
             "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
           Referer: url
         },
-        function(err, article, meta) {
-
+        (err, article, meta) => {
           if (err) {
-            return reject("fail: " + err);
+            return reject(`fail: ${err}`);
           }
           console.log(article.title);
           let content = h2m(article.content, {});
@@ -46,10 +54,10 @@ export function tomd(url) {
 
             cnTitle = cnTitle.replace(/[\n\r]/g, "");
             console.log(content);
-            let date = new Date();
+            const date = new Date();
 
-            let fileName = md5(url);
-            let body = `---
+            const fileName = md5(url);
+            const body = `---
 layout: post
 title:  "${cnTitle}"
 title2:  "${article.title}"
@@ -63,8 +71,8 @@ published: false
 ${content.trim()}
 {% endraw %}
 `;
-            let draftFolder = `jekyll/_drafts/${fileName}/`;
-            let filePath = `${draftFolder}${article.title.replace(
+            const draftFolder = `jekyll/_drafts/${fileName}/`;
+            const filePath = `${draftFolder}${article.title.replace(
               /[/\\]/g,
               " "
             )}.md`;
@@ -79,18 +87,7 @@ ${content.trim()}
         }
       );
     } else {
-      return reject("fail: " + url);
+      return reject(`fail: ${url}`);
     }
   });
-}
-function formatDate(date) {
-  let timeStr = `${formate2(date.getUTCHours())}:${formate2(date.getMinutes())}:${formate2(date.getSeconds())}`;
-  let dateStr = `${date.getFullYear()}-${formate2(date.getMonth())}-${formate2(date.getDate())}`;
-  return { dateStr, timeStr };
-}
-
-function formatDateTime(date) {
-  let timeStr = `${formate2(date.getUTCHours())}:${formate2(date.getMinutes())}:${formate2(date.getSeconds())}`;
-  let dateStr = `${date.getFullYear()}-${formate2(date.getMonth())}-${formate2(date.getDate())}`;
-  return `${dateStr} ${timeStr}  +0800`;
 }
