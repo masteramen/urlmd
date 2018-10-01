@@ -288,16 +288,19 @@ watcher
 
 setInterval(() => {
   if (shell.exec("git pull", { cwd: "jekyll" }).code !== 0) {
-    shell.echo(`${new Date()} Error: Git pull failed`);
+    shell.echo(`${new Date()} Error: Git pull jekyll failed`);
     shell.exit(1);
   } else if (
     shell.exec(`git commit -am "Auto-commit ${new Date()}"`).code !== 0
   ) {
-    shell.echo("Error: Git commit failed");
+    shell.echo("Error: Git commit jekyll failed");
     shell.exit(1);
   } else {
     if (shell.exec(`build.sh`).code !== 0) {
       shell.echo(`${new Date()} build failed`);
+    } else if (shell.exec("git pull", { cwd: "site" }).code !== 0) {
+      shell.echo(`${new Date()} Error: Git pull site failed`);
+      shell.exit(1);
     }
     console.log(`${new Date()} git commit success`);
   }
