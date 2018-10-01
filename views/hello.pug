@@ -2,12 +2,13 @@ html
   head
     title= title
   body
-   div=url
    div
     span still 
-    span(id="time")
-    span  seconds would redirect to add,
-    span  press drafts if you want go to drafts
+    span#time
+    - let actUrl = "/act?url="+encodeURIComponent(url);
+    span  seconds would redirect to 
+    a(href=actUrl) add 
+    span or go to 
     a(href=draft_url) drafts
 
    script.

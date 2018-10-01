@@ -69,7 +69,8 @@ app.get("/act", (req, res) => {
       res.send(result);
       exec(`code ${first[0]}`);
     } else {
-      md.tomd(url, req.query.lang);
+      console.log(md);
+      md(url, req.query.lang);
       const result =
         "<html><head><script>history.go(-2);</script></head></html>";
       res.send(result);
@@ -267,7 +268,7 @@ watcher
         console.log(e);
       }
 
-      log("File", filePath, "has been changed");
+      // log("File", filePath, "has been changed");
     })();
   })
   .on("unlink", filePath => {
@@ -286,29 +287,10 @@ watcher
     log("Raw event info:", event, filePath, details);
   });
 
-function pullcommitpush(cwd) {
-  if (shell.exec("git pull", { cwd }).code !== 0) {
-    shell.echo(`${new Date()} Error: Git pull ${cwd} failed`);
-    return 1;
-  }
-  if (
-    shell.exec(`git commit -am "Auto-commit ${new Date()}"`, { cwd }).code !== 0
-  ) {
-    shell.echo(`${new Date()} Error: Git commit ${cwd} failed`);
-    return 1;
-  }
-  if (shell.exec(`git push`, { cwd }).code !== 0) {
-    shell.echo(`${new Date()} Error: Git push ${cwd} failed`);
-    return 1;
-  }
-
-  return 0;
-}
-
 function build(time) {
   setTimeout(() => {
     shell.exec(`./build.sh`);
     build(time);
   }, time);
 }
-build(1000 * 60 * 1);
+build(1000 * 60 * 60 * 3);

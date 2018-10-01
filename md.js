@@ -19,7 +19,7 @@ function formatDateTime(date) {
   )}-${formate2(date.getDate())}`;
   return `${dateStr} ${timeStr}  +0800`;
 }
-export default function tomd(url) {
+module.exports = function tomd(url) {
   return new Promise((resolve, reject) => {
     console.log(url);
     if (url) {
@@ -90,4 +90,4 @@ ${content.trim()}
       return reject(`fail: ${url}`);
     }
   });
-}
+};
